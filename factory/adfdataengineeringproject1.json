@@ -1,0 +1,9 @@
+{
+	"name": "adfdataengineeringproject1",
+	"location": "switzerlandnorth",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "39e078b3-66f8-422a-a36e-849eb93bc0f9",
+		"tenantId": "3ecccd24-6e0f-4349-9a25-72da49e79adf"
+	}
+}
