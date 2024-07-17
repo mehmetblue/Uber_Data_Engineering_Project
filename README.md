@@ -23,3 +23,5 @@ This is our groundbreaking data engineering project at Uber together with Emrull
 🔄 Project Completion Post and other posts for the project can be found in my LinkedIn profile : https://www.linkedin.com/feed/update/urn:li:activity:7219279687540187136/
 
 Project Presentation: [Data_Engineering_Project_Presentation.pdf](https://github.com/user-attachments/files/16272236/Data_Engineering_Project_Presentation.pdf)
+
+Article link for those who want detailed information : (Will be added)
