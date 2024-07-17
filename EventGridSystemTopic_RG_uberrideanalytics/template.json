@@ -1,0 +1,125 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "SYSTEMTOPICS_ANONYMIZED_NAME": {
+            "defaultValue": "adlsg2uberrideanalytics-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+            "type": "String"
+        },
+        "storageaccounts_adlsg2uberrideanalytics_externalid": {
+            "defaultValue": "/subscriptions/YOUR_SUBSCRIPTION_ID/resourceGroups/rg_uberrideanalytics/providers/microsoft.storage/storageaccounts/adlsg2uberrideanalytics",
+            "type": "String"
+        }
+    },
+    "variables": {},
+    "resources": [
+        {
+            "type": "Microsoft.EventGrid/systemTopics",
+            "apiVersion": "2024-06-01-preview",
+            "name": "[parameters('SYSTEMTOPICS_ANONYMIZED_NAME')]",
+            "location": "swedencentral",
+            "properties": {
+                "source": "[parameters('storageaccounts_adlsg2uberrideanalytics_externalid')]",
+                "topicType": "microsoft.storage.storageaccounts"
+            }
+        },
+        {
+            "type": "Microsoft.EventGrid/systemTopics/eventSubscriptions",
+            "apiVersion": "2024-06-01-preview",
+            "name": "[concat(parameters('SYSTEMTOPICS_ANONYMIZED_NAME'), '/0400e959-3a1b-630f-0c31-9b67baf659c0')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.EventGrid/systemTopics', parameters('SYSTEMTOPICS_ANONYMIZED_NAME'))]"
+            ],
+            "properties": {
+                "destination": {
+                    "properties": {
+                        "maxEventsPerBatch": 1,
+                        "preferredBatchSizeInKilobytes": 64
+                    },
+                    "endpointType": "WebHook"
+                },
+                "filter": {
+                    "subjectBeginsWith": "/blobServices/default/containers/data/blobs/Trip_Transaction",
+                    "subjectEndsWith": ".csv",
+                    "includedEventTypes": [
+                        "Microsoft.Storage.BlobCreated"
+                    ],
+                    "advancedFilters": [
+                        {
+                            "values": [
+                                "CopyBlob",
+                                "PutBlob",
+                                "PutBlockList",
+                                "FlushWithClose",
+                                "DeleteBlob",
+                                "CreateFile",
+                                "DeleteFile"
+                            ],
+                            "operatorType": "StringIn",
+                            "key": "data.api"
+                        },
+                        {
+                            "value": 0,
+                            "operatorType": "NumberGreaterThan",
+                            "key": "data.contentLength"
+                        }
+                    ]
+                },
+                "eventDeliverySchema": "EventGridSchema",
+                "retryPolicy": {
+                    "maxDeliveryAttempts": 30,
+                    "eventTimeToLiveInMinutes": 1440
+                }
+            }
+        },
+        {
+            "type": "Microsoft.EventGrid/systemTopics/eventSubscriptions",
+            "apiVersion": "2024-06-01-preview",
+            "name": "[concat(parameters('SYSTEMTOPICS_ANONYMIZED_NAME'), '/xxxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.EventGrid/systemTopics', parameters('SYSTEMTOPICS_ANONYMIZED_NAME'))]"
+            ],
+            "properties": {
+                "destination": {
+                    "properties": {
+                        "maxEventsPerBatch": 1,
+                        "preferredBatchSizeInKilobytes": 64
+                    },
+                    "endpointType": "WebHook"
+                },
+                "filter": {
+                    "subjectBeginsWith": "/blobServices/default/containers/data/blobs/Ride_Rating",
+                    "subjectEndsWith": ".csv",
+                    "includedEventTypes": [
+                        "Microsoft.Storage.BlobCreated"
+                    ],
+                    "advancedFilters": [
+                        {
+                            "values": [
+                                "CopyBlob",
+                                "PutBlob",
+                                "PutBlockList",
+                                "FlushWithClose",
+                                "DeleteBlob",
+                                "CreateFile",
+                                "DeleteFile"
+                            ],
+                            "operatorType": "StringIn",
+                            "key": "data.api"
+                        },
+                        {
+                            "value": 0,
+                            "operatorType": "NumberGreaterThan",
+                            "key": "data.contentLength"
+                        }
+                    ]
+                },
+                "eventDeliverySchema": "EventGridSchema",
+                "retryPolicy": {
+                    "maxDeliveryAttempts": 30,
+                    "eventTimeToLiveInMinutes": 1440
+                }
+            }
+        }
+    ]
+}

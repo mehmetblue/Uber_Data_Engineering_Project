@@ -1,0 +1,12 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "systemTopics_adlsg2uberrideanalytics_edf2f90b_d663_45b1_a71b_ef702bd2a11f_name": {
+            "value": null
+        },
+        "storageaccounts_adlsg2uberrideanalytics_externalid": {
+            "value": null
+        }
+    }
+}

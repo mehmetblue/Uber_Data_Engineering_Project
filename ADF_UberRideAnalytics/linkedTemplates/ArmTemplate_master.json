@@ -1,0 +1,84 @@
+{
+    "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "factoryName": {
+            "type": "string",
+            "metadata": "Data Factory name",
+            "defaultValue": "ADFUberRideAnalytics"
+        },
+        "LinkedService_SQL_UberRideAnalytics_connectionString": {
+            "type": "secureString",
+            "metadata": "Secure string for 'connectionString' of 'LinkedService_SQL_UberRideAnalytics'"
+        },
+        "LinkedService_ADB_Uber_Orchestration_accessToken": {
+            "type": "secureString",
+            "metadata": "Secure string for 'accessToken' of 'LinkedService_ADB_Uber_Orchestration'"
+        },
+        "NewTripTransactionCSVTrigger_properties_typeProperties_scope": {
+            "type": "string",
+            "defaultValue": "/subscriptions/YOUR_SUBSCRIPTION_ID/resourceGroups/RG_UberRideAnalytics/providers/Microsoft.Storage/storageAccounts/adlsg2uberrideanalytics"
+        },
+        "NewRideRatingCSVTrigger_properties_typeProperties_scope": {
+            "type": "string",
+            "defaultValue": "/subscriptions/YOUR_SUBSCRIPTION_ID/resourceGroups/RG_UberRideAnalytics/providers/Microsoft.Storage/storageAccounts/adlsg2uberrideanalytics"
+        },
+        "LinkedService_ADLSGen2_UberRideAnalytics_properties_typeProperties_url": {
+            "type": "string",
+            "defaultValue": "https://adlsg2uberrideanalytics.dfs.core.windows.net/"
+        },
+        "LinkedService_ADB_Uber_Orchestration_properties_typeProperties_existingClusterId": {
+            "type": "string",
+            "defaultValue": "xxxx-xxxxxx-xxxxxxxx"
+        },
+        "containerUri": {
+            "type": "string",
+            "metadata": "URI to storage account containing linked ARM templates"
+        },
+        "containerSasToken": {
+            "type": "string",
+            "metadata": "Sas token to storage account containing linked ARM templates"
+        }
+    },
+    "variables": {
+        "factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+    },
+    "resources": [
+        {
+            "name": "ADFUberRideAnalytics_ArmTemplate_0",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2018-02-01",
+            "properties": {
+                "mode": "incremental",
+                "templateLink": {
+                    "uri": "[concat(parameters('containerUri'), '/ArmTemplate_0.json', parameters('containerSasToken'))]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "factoryName": {
+                        "value": "[parameters('factoryName')]"
+                    },
+                    "LinkedService_SQL_UberRideAnalytics_connectionString": {
+                        "value": "[parameters('LinkedService_SQL_UberRideAnalytics_connectionString')]"
+                    },
+                    "LinkedService_ADB_Uber_Orchestration_accessToken": {
+                        "value": "[parameters('LinkedService_ADB_Uber_Orchestration_accessToken')]"
+                    },
+                    "LinkedService_ADLSGen2_UberRideAnalytics_properties_typeProperties_url": {
+                        "value": "[parameters('LinkedService_ADLSGen2_UberRideAnalytics_properties_typeProperties_url')]"
+                    },
+                    "LinkedService_ADB_Uber_Orchestration_properties_typeProperties_existingClusterId": {
+                        "value": "[parameters('LinkedService_ADB_Uber_Orchestration_properties_typeProperties_existingClusterId')]"
+                    },
+                    "NewTripTransactionCSVTrigger_properties_typeProperties_scope": {
+                        "value": "[parameters('NewTripTransactionCSVTrigger_properties_typeProperties_scope')]"
+                    },
+                    "NewRideRatingCSVTrigger_properties_typeProperties_scope": {
+                        "value": "[parameters('NewRideRatingCSVTrigger_properties_typeProperties_scope')]"
+                    }
+                }
+            },
+            "dependsOn": []
+        }
+    ]
+}

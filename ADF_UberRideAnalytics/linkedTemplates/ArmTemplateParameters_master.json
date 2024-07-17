@@ -1,0 +1,33 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "factoryName": {
+            "value": "ADFUberRideAnalytics"
+        },
+        "LinkedService_SQL_UberRideAnalytics_connectionString": {
+            "value": ""
+        },
+        "LinkedService_ADB_Uber_Orchestration_accessToken": {
+            "value": ""
+        },
+        "NewTripTransactionCSVTrigger_properties_typeProperties_scope": {
+            "value": "/subscriptions/YOUR_SUBSCRIPTION_ID/resourceGroups/RG_UberRideAnalytics/providers/Microsoft.Storage/storageAccounts/adlsg2uberrideanalytics"
+        },
+        "NewRideRatingCSVTrigger_properties_typeProperties_scope": {
+            "value": "/subscriptions/YOUR_SUBSCRIPTION_ID/resourceGroups/RG_UberRideAnalytics/providers/Microsoft.Storage/storageAccounts/adlsg2uberrideanalytics"
+        },
+        "LinkedService_ADLSGen2_UberRideAnalytics_properties_typeProperties_url": {
+            "value": "https://adlsg2uberrideanalytics.dfs.core.windows.net/"
+        },
+        "LinkedService_ADB_Uber_Orchestration_properties_typeProperties_existingClusterId": {
+            "value": "xxxx-xxxxxx-xxxxxxxx"
+        },
+        "containerUri": {
+            "value": ""
+        },
+        "containerSasToken": {
+            "value": ""
+        }
+    }
+}

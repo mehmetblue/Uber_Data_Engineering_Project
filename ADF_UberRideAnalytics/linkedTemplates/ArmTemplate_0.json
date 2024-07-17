@@ -1,0 +1,834 @@
+{
+    "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "factoryName": {
+            "type": "string",
+            "metadata": "Data Factory name",
+            "defaultValue": "ADFUberRideAnalytics"
+        },
+        "LinkedService_SQL_UberRideAnalytics_connectionString": {
+            "type": "secureString",
+            "metadata": "Secure string for 'connectionString' of 'LinkedService_SQL_UberRideAnalytics'"
+        },
+        "LinkedService_ADB_Uber_Orchestration_accessToken": {
+            "type": "secureString",
+            "metadata": "Secure string for 'accessToken' of 'LinkedService_ADB_Uber_Orchestration'"
+        },
+        "LinkedService_ADLSGen2_UberRideAnalytics_properties_typeProperties_url": {
+            "type": "string",
+            "defaultValue": "https://adlsg2uberrideanalytics.dfs.core.windows.net/"
+        },
+        "LinkedService_ADB_Uber_Orchestration_properties_typeProperties_existingClusterId": {
+            "type": "string",
+            "defaultValue": "0703-165452-qv4bogsg"
+        },
+        "NewTripTransactionCSVTrigger_properties_typeProperties_scope": {
+            "type": "string",
+            "defaultValue": "/subscriptions/YOUR_SUBSCRIPTION_ID/resourceGroups/RG_UberRideAnalytics/providers/Microsoft.Storage/storageAccounts/adlsg2uberrideanalytics"
+        },
+        "NewRideRatingCSVTrigger_properties_typeProperties_scope": {
+            "type": "string",
+            "defaultValue": "/subscriptions/YOUR_SUBSCRIPTION_ID/resourceGroups/RG_UberRideAnalytics/providers/Microsoft.Storage/storageAccounts/adlsg2uberrideanalytics"
+        }
+    },
+    "variables": {
+        "factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+    },
+    "resources": [
+        {
+            "name": "[concat(parameters('factoryName'), '/LinkedService_ADLSGen2_UberRideAnalytics')]",
+            "type": "Microsoft.DataFactory/factories/linkedServices",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "description": "This linked service connects to the Azure Data Lake Storage Gen2 instance named 'adlsg2uberrideanalytics' which stores CSV data files used in the Uber Ride Analytics project. It facilitates secure and managed access to ride data sets, enabling streamlined data extraction and loading processes for our analytics pipelines. This service uses System Assigned Managed Identity for authentication, ensuring enhanced security and simplified credentials management.",
+                "annotations": [],
+                "type": "AzureBlobFS",
+                "typeProperties": {
+                    "url": "[parameters('LinkedService_ADLSGen2_UberRideAnalytics_properties_typeProperties_url')]"
+                }
+            },
+            "dependsOn": []
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/LinkedService_SQL_UberRideAnalytics')]",
+            "type": "Microsoft.DataFactory/factories/linkedServices",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "annotations": [],
+                "type": "AzureSqlDatabase",
+                "typeProperties": {
+                    "connectionString": "[parameters('LinkedService_SQL_UberRideAnalytics_connectionString')]"
+                }
+            },
+            "dependsOn": []
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/LinkedService_ADB_Uber_Orchestration')]",
+            "type": "Microsoft.DataFactory/factories/linkedServices",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "annotations": [],
+                "type": "AzureDatabricks",
+                "typeProperties": {
+                    "domain": "https://adb-xxxxxxxxxxxxxxxxxx.xx.azuredatabricks.net",
+                    "accessToken": {
+                        "type": "SecureString",
+                        "value": "[parameters('LinkedService_ADB_Uber_Orchestration_accessToken')]"
+                    },
+                    "existingClusterId": "[parameters('LinkedService_ADB_Uber_Orchestration_properties_typeProperties_existingClusterId')]"
+                }
+            },
+            "dependsOn": []
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/RideRatingSQLTableDataset')]",
+            "type": "Microsoft.DataFactory/factories/datasets",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "linkedServiceName": {
+                    "referenceName": "LinkedService_SQL_UberRideAnalytics",
+                    "type": "LinkedServiceReference"
+                },
+                "annotations": [],
+                "type": "AzureSqlTable",
+                "schema": [],
+                "typeProperties": {
+                    "schema": "dbo",
+                    "table": "Ride_Rating_Table"
+                }
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/linkedServices/LinkedService_SQL_UberRideAnalytics')]"
+            ]
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/RideRatingCSVDataset')]",
+            "type": "Microsoft.DataFactory/factories/datasets",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "linkedServiceName": {
+                    "referenceName": "LinkedService_ADLSGen2_UberRideAnalytics",
+                    "type": "LinkedServiceReference"
+                },
+                "annotations": [],
+                "type": "DelimitedText",
+                "typeProperties": {
+                    "location": {
+                        "type": "AzureBlobFSLocation",
+                        "fileName": "Ride_Rating_Table.csv",
+                        "fileSystem": "data"
+                    },
+                    "columnDelimiter": ",",
+                    "escapeChar": "\\",
+                    "firstRowAsHeader": true,
+                    "quoteChar": "\""
+                },
+                "schema": [
+                    {
+                        "name": "trip_id",
+                        "type": "String"
+                    },
+                    {
+                        "name": "customer_rating",
+                        "type": "String"
+                    },
+                    {
+                        "name": "driver_rating",
+                        "type": "String"
+                    },
+                    {
+                        "name": "customer_id",
+                        "type": "String"
+                    },
+                    {
+                        "name": "driver_id",
+                        "type": "String"
+                    }
+                ]
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/linkedServices/LinkedService_ADLSGen2_UberRideAnalytics')]"
+            ]
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/TripTransactionSQLTableDataset')]",
+            "type": "Microsoft.DataFactory/factories/datasets",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "linkedServiceName": {
+                    "referenceName": "LinkedService_SQL_UberRideAnalytics",
+                    "type": "LinkedServiceReference"
+                },
+                "annotations": [],
+                "type": "AzureSqlTable",
+                "schema": [],
+                "typeProperties": {
+                    "schema": "dbo",
+                    "table": "Trip_Transaction_Table"
+                }
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/linkedServices/LinkedService_SQL_UberRideAnalytics')]"
+            ]
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/TripTransactionCSVDataset')]",
+            "type": "Microsoft.DataFactory/factories/datasets",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "linkedServiceName": {
+                    "referenceName": "LinkedService_ADLSGen2_UberRideAnalytics",
+                    "type": "LinkedServiceReference"
+                },
+                "annotations": [],
+                "type": "DelimitedText",
+                "typeProperties": {
+                    "location": {
+                        "type": "AzureBlobFSLocation",
+                        "fileName": "Trip_Transaction_Table.csv",
+                        "fileSystem": "data"
+                    },
+                    "columnDelimiter": ",",
+                    "escapeChar": "\\",
+                    "firstRowAsHeader": true,
+                    "quoteChar": "\""
+                },
+                "schema": [
+                    {
+                        "name": "trip_id",
+                        "type": "String"
+                    },
+                    {
+                        "name": "trip_start_timestamp",
+                        "type": "String"
+                    },
+                    {
+                        "name": "trip_end_timestamp",
+                        "type": "String"
+                    },
+                    {
+                        "name": "driver_id",
+                        "type": "String"
+                    },
+                    {
+                        "name": "driver_name",
+                        "type": "String"
+                    },
+                    {
+                        "name": "source_location_address1",
+                        "type": "String"
+                    },
+                    {
+                        "name": "source_city",
+                        "type": "String"
+                    },
+                    {
+                        "name": "source_province_state",
+                        "type": "String"
+                    },
+                    {
+                        "name": "source_country",
+                        "type": "String"
+                    },
+                    {
+                        "name": "destination_location_address1",
+                        "type": "String"
+                    },
+                    {
+                        "name": "destination_city",
+                        "type": "String"
+                    },
+                    {
+                        "name": "destination_province_state",
+                        "type": "String"
+                    },
+                    {
+                        "name": "destination_country",
+                        "type": "String"
+                    },
+                    {
+                        "name": "total_distance",
+                        "type": "String"
+                    },
+                    {
+                        "name": "total_fare",
+                        "type": "String"
+                    },
+                    {
+                        "name": "trip_status",
+                        "type": "String"
+                    },
+                    {
+                        "name": "delay_start_time_mins",
+                        "type": "String"
+                    },
+                    {
+                        "name": "payment_method",
+                        "type": "String"
+                    },
+                    {
+                        "name": "payment_status",
+                        "type": "String"
+                    },
+                    {
+                        "name": "customer_id",
+                        "type": "String"
+                    },
+                    {
+                        "name": "customer_name",
+                        "type": "String"
+                    }
+                ]
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/linkedServices/LinkedService_ADLSGen2_UberRideAnalytics')]"
+            ]
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/Ride_Rating_Flow')]",
+            "type": "Microsoft.DataFactory/factories/dataflows",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "description": "This data flow imports and integrates  \"Ride_Rating_Table.csv\" from Azure Data Lake Storage Gen2 into the [dbo].[Ride_Rating_Table] in Azure SQL Database. This automated process ensures that ride rating data is consistently updated for analysis and reporting.",
+                "type": "MappingDataFlow",
+                "typeProperties": {
+                    "sources": [
+                        {
+                            "dataset": {
+                                "referenceName": "RideRatingCSVDataset",
+                                "type": "DatasetReference"
+                            },
+                            "name": "RideRatingCSVSource",
+                            "description": "This source extracts data from the 'Ride_Rating_Table.csv' located in Azure Data Lake Storage Gen2. It is configured to pull the latest ride rating data ensuring that the data flow receives up-to-date information for processing and loading into the Azure SQL Database."
+                        }
+                    ],
+                    "sinks": [
+                        {
+                            "dataset": {
+                                "referenceName": "RideRatingSQLTableDataset",
+                                "type": "DatasetReference"
+                            },
+                            "name": "RideRatingSQLSink",
+                            "rejectedDataLinkedService": {
+                                "referenceName": "LinkedService_ADLSGen2_UberRideAnalytics",
+                                "type": "LinkedServiceReference"
+                            }
+                        }
+                    ],
+                    "transformations": [],
+                    "scriptLines": [
+                        "source(output(",
+                        "          trip_id as integer,",
+                        "          customer_rating as integer,",
+                        "          driver_rating as integer,",
+                        "          customer_id as integer,",
+                        "          driver_id as string",
+                        "     ),",
+                        "     allowSchemaDrift: true,",
+                        "     validateSchema: false,",
+                        "     ignoreNoFilesFound: false,",
+                        "     moveFiles: ['','transferred_files']) ~> RideRatingCSVSource",
+                        "RideRatingCSVSource sink(allowSchemaDrift: true,",
+                        "     validateSchema: false,",
+                        "     deletable:false,",
+                        "     insertable:true,",
+                        "     updateable:false,",
+                        "     upsertable:false,",
+                        "     format: 'table',",
+                        "     skipDuplicateMapInputs: true,",
+                        "     skipDuplicateMapOutputs: true,",
+                        "     errorHandlingOption: 'allErrors',",
+                        "     outputRejectedData: true,",
+                        "     rejectedData_fileSystem: 'errors',",
+                        "     transactionCommit: 'batch',",
+                        "     reportSuccessOnError: true) ~> RideRatingSQLSink"
+                    ]
+                }
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/datasets/RideRatingCSVDataset')]",
+                "[concat(variables('factoryId'), '/datasets/RideRatingSQLTableDataset')]",
+                "[concat(variables('factoryId'), '/linkedServices/LinkedService_ADLSGen2_UberRideAnalytics')]"
+            ]
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/Trip_Transaction_Flow')]",
+            "type": "Microsoft.DataFactory/factories/dataflows",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "description": "This data flow imports and integrates  \"Trip_Transaction_Table.csv\" from Azure Data Lake Storage Gen2 into the [dbo].[Trip_Transaction_Table] in Azure SQL Database. This automated process ensures that ride rating data is consistently updated for analysis and reporting.",
+                "type": "MappingDataFlow",
+                "typeProperties": {
+                    "sources": [
+                        {
+                            "dataset": {
+                                "referenceName": "TripTransactionCSVDataset",
+                                "type": "DatasetReference"
+                            },
+                            "name": "TripTransactionCSVSource",
+                            "description": "This source extracts data from the 'Trip_Transaction_Table.csv' located in Azure Data Lake Storage Gen2. It is configured to pull the latest trip transaction data ensuring that the data flow receives up-to-date information for processing and loading into the Azure SQL Database."
+                        }
+                    ],
+                    "sinks": [
+                        {
+                            "dataset": {
+                                "referenceName": "TripTransactionSQLTableDataset",
+                                "type": "DatasetReference"
+                            },
+                            "name": "TripTransactionSQLSink",
+                            "description": "Export data to TripTransactionSQLTableDataset",
+                            "rejectedDataLinkedService": {
+                                "referenceName": "LinkedService_ADLSGen2_UberRideAnalytics",
+                                "type": "LinkedServiceReference"
+                            }
+                        }
+                    ],
+                    "transformations": [],
+                    "scriptLines": [
+                        "source(output(",
+                        "          trip_id as integer,",
+                        "          trip_start_timestamp as timestamp 'yyyy-MM-dd\\'T\\'HH:mm:ss',",
+                        "          trip_end_timestamp as timestamp 'yyyy-MM-dd\\'T\\'HH:mm:ss',",
+                        "          driver_id as string,",
+                        "          driver_name as string,",
+                        "          source_location_address1 as string,",
+                        "          source_city as string,",
+                        "          source_province_state as string,",
+                        "          source_country as string,",
+                        "          destination_location_address1 as string,",
+                        "          destination_city as string,",
+                        "          destination_province_state as string,",
+                        "          destination_country as string,",
+                        "          total_distance as integer,",
+                        "          total_fare as integer '##0',",
+                        "          trip_status as string,",
+                        "          delay_start_time_mins as integer,",
+                        "          payment_method as string,",
+                        "          payment_status as string,",
+                        "          customer_id as string,",
+                        "          customer_name as string",
+                        "     ),",
+                        "     allowSchemaDrift: true,",
+                        "     validateSchema: false,",
+                        "     ignoreNoFilesFound: false,",
+                        "     moveFiles: ['','transferred_files']) ~> TripTransactionCSVSource",
+                        "TripTransactionCSVSource sink(allowSchemaDrift: true,",
+                        "     validateSchema: false,",
+                        "     deletable:false,",
+                        "     insertable:true,",
+                        "     updateable:false,",
+                        "     upsertable:false,",
+                        "     format: 'table',",
+                        "     skipDuplicateMapInputs: true,",
+                        "     skipDuplicateMapOutputs: true,",
+                        "     errorHandlingOption: 'allErrors',",
+                        "     outputRejectedData: true,",
+                        "     rejectedData_fileSystem: 'errors',",
+                        "     transactionCommit: 'batch',",
+                        "     reportSuccessOnError: true) ~> TripTransactionSQLSink"
+                    ]
+                }
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/datasets/TripTransactionCSVDataset')]",
+                "[concat(variables('factoryId'), '/datasets/TripTransactionSQLTableDataset')]",
+                "[concat(variables('factoryId'), '/linkedServices/LinkedService_ADLSGen2_UberRideAnalytics')]"
+            ]
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/Orchestration_Ride_Rating')]",
+            "type": "Microsoft.DataFactory/factories/pipelines",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "activities": [
+                    {
+                        "name": "Ride_Rating_Flow",
+                        "type": "ExecuteDataFlow",
+                        "dependsOn": [],
+                        "policy": {
+                            "timeout": "0.12:00:00",
+                            "retry": 1,
+                            "retryIntervalInSeconds": 30,
+                            "secureOutput": false,
+                            "secureInput": false
+                        },
+                        "userProperties": [],
+                        "typeProperties": {
+                            "dataflow": {
+                                "referenceName": "Ride_Rating_Flow",
+                                "type": "DataFlowReference",
+                                "parameters": {},
+                                "datasetParameters": {
+                                    "RideRatingCSVSource": {},
+                                    "RideRatingSQLSink": {}
+                                }
+                            },
+                            "staging": {},
+                            "compute": {
+                                "coreCount": 8,
+                                "computeType": "General"
+                            },
+                            "traceLevel": "Fine"
+                        }
+                    },
+                    {
+                        "name": "Orchestration_Ride_Rating",
+                        "type": "DatabricksNotebook",
+                        "dependsOn": [
+                            {
+                                "activity": "Ride_Rating_Flow",
+                                "dependencyConditions": [
+                                    "Succeeded"
+                                ]
+                            }
+                        ],
+                        "policy": {
+                            "timeout": "0.12:00:00",
+                            "retry": 1,
+                            "retryIntervalInSeconds": 30,
+                            "secureOutput": false,
+                            "secureInput": false
+                        },
+                        "userProperties": [],
+                        "typeProperties": {
+                            "notebookPath": "/UberMedallionDataLayers/silver/Orchestration_ride"
+                        },
+                        "linkedServiceName": {
+                            "referenceName": "LinkedService_ADB_Uber_Orchestration",
+                            "type": "LinkedServiceReference"
+                        }
+                    },
+                    {
+                        "name": "SuccessEmailTrigger",
+                        "type": "WebActivity",
+                        "dependsOn": [
+                            {
+                                "activity": "Orchestration_Ride_Rating",
+                                "dependencyConditions": [
+                                    "Succeeded"
+                                ]
+                            }
+                        ],
+                        "policy": {
+                            "timeout": "0.12:00:00",
+                            "retry": 1,
+                            "retryIntervalInSeconds": 30,
+                            "secureOutput": false,
+                            "secureInput": false
+                        },
+                        "userProperties": [],
+                        "typeProperties": {
+                            "method": "POST",
+                            "headers": {},
+                            "url": "https://prod2-12.swedencentral.logic.azure.com/workflows/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx/triggers/When_a_HTTP_request_is_received/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2FWhen_a_HTTP_request_is_received%2Frun&sv=1.0&sig=95hyn-TaAtaoAFocBpG_IgyUn48w6ue8AFJ4LXJUu18",
+                            "body": {
+                                "Pipeline": "@{pipeline().Pipeline}",
+                                "Success/Failure": "Success",
+                                "DatafactoryName": "@{pipeline().DataFactory}",
+                                "PipelinerunId": "@{pipeline().RunId}",
+                                "Time": "@{pipeline().TriggerTime}",
+                                "Message": "Pipeline has run successfully."
+                            }
+                        }
+                    },
+                    {
+                        "name": "SetFailureStatus",
+                        "type": "SetVariable",
+                        "dependsOn": [
+                            {
+                                "activity": "Orchestration_Ride_Rating",
+                                "dependencyConditions": [
+                                    "Failed"
+                                ]
+                            }
+                        ],
+                        "policy": {
+                            "secureOutput": false,
+                            "secureInput": false
+                        },
+                        "userProperties": [],
+                        "typeProperties": {
+                            "variableName": "Error_Message",
+                            "value": {
+                                "value": "@activity('Orchestration_Ride_Rating').Error.message",
+                                "type": "Expression"
+                            }
+                        }
+                    },
+                    {
+                        "name": "FailureEmailTrigger",
+                        "type": "WebActivity",
+                        "dependsOn": [
+                            {
+                                "activity": "SetFailureStatus",
+                                "dependencyConditions": [
+                                    "Succeeded"
+                                ]
+                            }
+                        ],
+                        "policy": {
+                            "timeout": "0.12:00:00",
+                            "retry": 1,
+                            "retryIntervalInSeconds": 30,
+                            "secureOutput": false,
+                            "secureInput": false
+                        },
+                        "userProperties": [],
+                        "typeProperties": {
+                            "method": "POST",
+                            "headers": {},
+                            "url": "https://prod2-12.swedencentral.logic.azure.com/workflows/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx/triggers/When_a_HTTP_request_is_received/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2FWhen_a_HTTP_request_is_received%2Frun&sv=1.0&sig=95hyn-TaAtaoAFocBpG_IgyUn48w6ue8AFJ4LXJUu18",
+                            "body": {
+                                "value": "{\"Pipeline\":\"@{pipeline().Pipeline}\",\"Success/Failure\":\"Failure\",\"DatafactoryName\":\"@{pipeline().DataFactory}\",\"PipelinerunId\":\"@{pipeline().RunId}\",\"Time\":\"@{pipeline().TriggerTime}\",\"Message\":\"@{variables('Error_Message')}\"",
+                                "type": "Expression"
+                            }
+                        }
+                    }
+                ],
+                "policy": {
+                    "elapsedTimeMetric": {}
+                },
+                "variables": {
+                    "Error_Message": {
+                        "type": "String"
+                    }
+                },
+                "annotations": [],
+                "lastPublishTime": "2024-07-03T18:08:30Z"
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/dataflows/Ride_Rating_Flow')]",
+                "[concat(variables('factoryId'), '/linkedServices/LinkedService_ADB_Uber_Orchestration')]"
+            ]
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/Orchestration_Trip_Transaction')]",
+            "type": "Microsoft.DataFactory/factories/pipelines",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "activities": [
+                    {
+                        "name": "Orchestration_Trip_Transaction",
+                        "type": "DatabricksNotebook",
+                        "dependsOn": [
+                            {
+                                "activity": "Trip_Transaction_Flow",
+                                "dependencyConditions": [
+                                    "Succeeded"
+                                ]
+                            }
+                        ],
+                        "policy": {
+                            "timeout": "0.12:00:00",
+                            "retry": 1,
+                            "retryIntervalInSeconds": 30,
+                            "secureOutput": false,
+                            "secureInput": false
+                        },
+                        "userProperties": [],
+                        "typeProperties": {
+                            "notebookPath": "/UberMedallionDataLayers/silver/Orchestration_trip"
+                        },
+                        "linkedServiceName": {
+                            "referenceName": "LinkedService_ADB_Uber_Orchestration",
+                            "type": "LinkedServiceReference"
+                        }
+                    },
+                    {
+                        "name": "SuccessEmailTrigger",
+                        "type": "WebActivity",
+                        "dependsOn": [
+                            {
+                                "activity": "Orchestration_Trip_Transaction",
+                                "dependencyConditions": [
+                                    "Succeeded"
+                                ]
+                            }
+                        ],
+                        "policy": {
+                            "timeout": "0.12:00:00",
+                            "retry": 1,
+                            "retryIntervalInSeconds": 30,
+                            "secureOutput": false,
+                            "secureInput": false
+                        },
+                        "userProperties": [],
+                        "typeProperties": {
+                            "method": "POST",
+                            "headers": {},
+                            "url": "https://prod2-12.swedencentral.logic.azure.com/workflows/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx/triggers/When_a_HTTP_request_is_received/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2FWhen_a_HTTP_request_is_received%2Frun&sv=1.0&sig=95hyn-TaAtaoAFocBpG_IgyUn48w6ue8AFJ4LXJUu18",
+                            "body": {
+                                "Pipeline": "@{pipeline().Pipeline}",
+                                "Success/Failure": "Success",
+                                "DatafactoryName": "@{pipeline().DataFactory}",
+                                "PipelinerunId": "@{pipeline().RunId}",
+                                "Time": "@{pipeline().TriggerTime}",
+                                "Message": "Pipeline has run successfully."
+                            }
+                        }
+                    },
+                    {
+                        "name": "Trip_Transaction_Flow",
+                        "type": "ExecuteDataFlow",
+                        "dependsOn": [],
+                        "policy": {
+                            "timeout": "0.12:00:00",
+                            "retry": 0,
+                            "retryIntervalInSeconds": 30,
+                            "secureOutput": false,
+                            "secureInput": false
+                        },
+                        "userProperties": [],
+                        "typeProperties": {
+                            "dataflow": {
+                                "referenceName": "Trip_Transaction_Flow",
+                                "type": "DataFlowReference",
+                                "parameters": {},
+                                "datasetParameters": {
+                                    "TripTransactionCSVSource": {},
+                                    "TripTransactionSQLSink": {}
+                                }
+                            },
+                            "staging": {},
+                            "compute": {
+                                "coreCount": 8,
+                                "computeType": "General"
+                            },
+                            "traceLevel": "Fine"
+                        }
+                    },
+                    {
+                        "name": "SetFailureStatus",
+                        "type": "SetVariable",
+                        "dependsOn": [
+                            {
+                                "activity": "Orchestration_Trip_Transaction",
+                                "dependencyConditions": [
+                                    "Failed"
+                                ]
+                            }
+                        ],
+                        "policy": {
+                            "secureOutput": false,
+                            "secureInput": false
+                        },
+                        "userProperties": [],
+                        "typeProperties": {
+                            "variableName": "Error_Message",
+                            "value": {
+                                "value": "@activity('Orchestration_Trip_Transaction').Error.message",
+                                "type": "Expression"
+                            }
+                        }
+                    },
+                    {
+                        "name": "FailureEmailTrigger",
+                        "type": "WebActivity",
+                        "dependsOn": [
+                            {
+                                "activity": "SetFailureStatus",
+                                "dependencyConditions": [
+                                    "Succeeded"
+                                ]
+                            }
+                        ],
+                        "policy": {
+                            "timeout": "0.12:00:00",
+                            "retry": 1,
+                            "retryIntervalInSeconds": 30,
+                            "secureOutput": false,
+                            "secureInput": false
+                        },
+                        "userProperties": [],
+                        "typeProperties": {
+                            "method": "POST",
+                            "headers": {},
+                            "url": "https://prod2-12.swedencentral.logic.azure.com/workflows/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx/triggers/When_a_HTTP_request_is_received/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2FWhen_a_HTTP_request_is_received%2Frun&sv=1.0&sig=95hyn-TaAtaoAFocBpG_IgyUn48w6ue8AFJ4LXJUu18",
+                            "body": {
+                                "value": "{\"Pipeline\":\"@{pipeline().Pipeline}\",\"Success/Failure\":\"Failure\",\"DatafactoryName\":\"@{pipeline().DataFactory}\",\"PipelinerunId\":\"@{pipeline().RunId}\",\"Time\":\"@{pipeline().TriggerTime}\",\"Message\":\"@{variables('Error_Message')}\"",
+                                "type": "Expression"
+                            }
+                        }
+                    }
+                ],
+                "policy": {
+                    "elapsedTimeMetric": {}
+                },
+                "variables": {
+                    "Error_Message": {
+                        "type": "String"
+                    }
+                },
+                "annotations": [],
+                "lastPublishTime": "2024-07-03T18:08:30Z"
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/linkedServices/LinkedService_ADB_Uber_Orchestration')]",
+                "[concat(variables('factoryId'), '/dataflows/Trip_Transaction_Flow')]"
+            ]
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/NewTripTransactionCSVTrigger')]",
+            "type": "Microsoft.DataFactory/factories/triggers",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "annotations": [],
+                "runtimeState": "Started",
+                "pipelines": [
+                    {
+                        "pipelineReference": {
+                            "referenceName": "Orchestration_Trip_Transaction",
+                            "type": "PipelineReference"
+                        },
+                        "parameters": {}
+                    }
+                ],
+                "type": "BlobEventsTrigger",
+                "typeProperties": {
+                    "blobPathBeginsWith": "/data/blobs/Trip_Transaction",
+                    "blobPathEndsWith": ".csv",
+                    "ignoreEmptyBlobs": true,
+                    "scope": "[parameters('NewTripTransactionCSVTrigger_properties_typeProperties_scope')]",
+                    "events": [
+                        "Microsoft.Storage.BlobCreated"
+                    ]
+                }
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/pipelines/Orchestration_Trip_Transaction')]"
+            ]
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/NewRideRatingCSVTrigger')]",
+            "type": "Microsoft.DataFactory/factories/triggers",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "annotations": [],
+                "runtimeState": "Started",
+                "pipelines": [
+                    {
+                        "pipelineReference": {
+                            "referenceName": "Orchestration_Ride_Rating",
+                            "type": "PipelineReference"
+                        },
+                        "parameters": {}
+                    }
+                ],
+                "type": "BlobEventsTrigger",
+                "typeProperties": {
+                    "blobPathBeginsWith": "/data/blobs/Ride_Rating",
+                    "blobPathEndsWith": ".csv",
+                    "ignoreEmptyBlobs": true,
+                    "scope": "[parameters('NewRideRatingCSVTrigger_properties_typeProperties_scope')]",
+                    "events": [
+                        "Microsoft.Storage.BlobCreated"
+                    ]
+                }
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/pipelines/Orchestration_Ride_Rating')]"
+            ]
+        }
+    ]
+}

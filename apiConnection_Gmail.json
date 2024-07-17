@@ -1,0 +1,55 @@
+{
+    "kind": "V1",
+    "properties": {
+        "displayName": "yourmail@gmail.com",
+        "authenticatedUser": {
+            "name": "yourmail@gmail.com"
+        },
+        "overallStatus": "Connected",
+        "statuses": [
+            {
+                "status": "Connected"
+            }
+        ],
+        "connectionState": "Enabled",
+        "parameterValueSet": {
+            "name": "shared-application",
+            "values": {}
+        },
+        "customParameterValues": {},
+        "createdTime": "2024-07-03T14:26:35.4825231Z",
+        "changedTime": "2024-07-03T22:14:38.2768417Z",
+        "api": {
+            "name": "gmail",
+            "displayName": "Gmail",
+            "description": "Gmail is a web-based email service from Google. With the Gmail connector, you can perform actions such as send or receive e-mail messages, and trigger flows on new e-mails.",
+            "iconUri": "https://connectoricons-prod.azureedge.net/releases/v1.0.1694/1.0.1694.3752/gmail/icon.png",
+            "brandColor": "#20427f",
+            "category": "Standard",
+            "id": "/subscriptions/YOUR_SUBSCRIPTION_ID/providers/Microsoft.Web/locations/swedencentral/managedApis/gmail",
+            "type": "Microsoft.Web/locations/managedApis"
+        },
+        "testLinks": [
+            {
+                "requestUri": "https://management.azure.com:443/subscriptions/YOUR_SUBSCRIPTION_ID/resourceGroups/RG_UberRideAnalytics/providers/Microsoft.Web/connections/gmail/extensions/proxy/TestConnection?api-version=2018-07-01-preview",
+                "method": "get"
+            }
+        ],
+        "testRequests": [
+            {
+                "body": {
+                    "request": {
+                        "method": "get",
+                        "path": "TestConnection"
+                    }
+                },
+                "requestUri": "https://management.azure.com:443/subscriptions/YOUR_SUBSCRIPTION_ID/resourceGroups/RG_UberRideAnalytics/providers/Microsoft.Web/connections/gmail/dynamicInvoke?api-version=2018-07-01-preview",
+                "method": "POST"
+            }
+        ]
+    },
+    "id": "/subscriptions/YOUR_SUBSCRIPTION_ID/resourceGroups/RG_UberRideAnalytics/providers/Microsoft.Web/connections/gmail",
+    "name": "gmail",
+    "type": "Microsoft.Web/connections",
+    "location": "swedencentral"
+}
