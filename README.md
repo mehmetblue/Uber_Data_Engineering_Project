@@ -21,3 +21,5 @@ This is our groundbreaking data engineering project at Uber together with Emrull
 🙏 Thank You: A huge thank you to everyone involved, especially the team members who worked tirelessly and the community that supported us throughout this project. Your feedback and encouragement have been invaluable.
 
 🔄 All posts for the project can be found in my LinkedIn profile : www.linkedin.com/in/mehmet-koc-b85789294
+
+Project Presentation: [Data_Engineering_Project_Presentation.pdf](https://github.com/user-attachments/files/16272236/Data_Engineering_Project_Presentation.pdf)
