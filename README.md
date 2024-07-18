@@ -24,4 +24,4 @@ This is our groundbreaking data engineering project at Uber together with Emrull
 
 Project Presentation: [Data_Engineering_Project_Presentation.pdf](https://github.com/user-attachments/files/16272236/Data_Engineering_Project_Presentation.pdf)
 
-Article link for those who want detailed information : (Will be added)
+Article link for those who want detailed information : https://www.linkedin.com/pulse/end-to-end-azure-data-engineering-project-implementing-mehmet-ko%C3%A7-mkige/
